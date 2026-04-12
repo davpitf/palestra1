@@ -1,0 +1,443 @@
+<!DOCTYPE html>
+<html lang="it">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover, user-scalable=no">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="Palestra">
+<meta name="theme-color" content="#0c0c0c">
+<title>Palestra</title>
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=Barlow+Condensed:wght@400;600;700;800;900&display=swap');
+
+  :root {
+    --bg: #0c0c0c;
+    --card: #181818;
+    --border: #2a2a2a;
+    --input-bg: #222;
+    --input-border: #333;
+    --safe-top: env(safe-area-inset-top, 44px);
+    --safe-bottom: env(safe-area-inset-bottom, 20px);
+    --day-color: #e85d04;
+  }
+
+  * { box-sizing: border-box; margin: 0; padding: 0; -webkit-tap-highlight-color: transparent; }
+
+  html, body {
+    background: var(--bg); color: #fff;
+    font-family: 'Barlow Condensed', 'Arial Narrow', Arial, sans-serif;
+    height: 100%; overflow: hidden;
+  }
+
+  #app {
+    display: flex; flex-direction: column;
+    height: 100dvh; max-width: 430px;
+    margin: 0 auto; overflow: hidden;
+  }
+
+  /* HEADER */
+  #header {
+    padding: calc(var(--safe-top) + 12px) 20px 14px;
+    background: var(--bg); border-bottom: 1px solid var(--border);
+    flex-shrink: 0; display: flex; align-items: center; gap: 12px; z-index: 10;
+  }
+  #back-btn {
+    background: #222; border: none; color: #fff;
+    width: 38px; height: 38px; border-radius: 10px; font-size: 24px;
+    cursor: pointer; display: none; align-items: center; justify-content: center;
+    flex-shrink: 0; font-family: inherit; line-height: 1;
+  }
+  #header-eyebrow { font-size: 11px; font-weight: 700; letter-spacing: 3px; text-transform: uppercase; margin-bottom: 2px; color: var(--day-color); }
+  #header-title { font-size: 30px; font-weight: 900; letter-spacing: -0.5px; color: #fff; text-transform: uppercase; line-height: 1; }
+
+  /* SCREENS */
+  .screen { flex: 1; overflow-y: auto; -webkit-overflow-scrolling: touch; padding: 14px 14px 0; display: none; flex-direction: column; }
+  .screen.active { display: flex; }
+
+  .section-label { font-size: 12px; color: #888; font-weight: 800; letter-spacing: 2px; text-transform: uppercase; margin-bottom: 14px; }
+
+  /* HOME */
+  .day-wrap { position: relative; margin-bottom: 12px; }
+  .day-btn {
+    width: 100%; background: var(--card); border: 1px solid var(--border);
+    border-radius: 20px; padding: 20px 56px 18px 20px;
+    cursor: pointer; text-align: left; display: block;
+    position: relative; overflow: hidden; font-family: inherit;
+  }
+  .day-btn.has-data { border-color: var(--day-color); }
+  .day-top-bar { position: absolute; top: 0; left: 0; right: 0; height: 2px; background: linear-gradient(90deg, var(--day-color), transparent); display: none; }
+  .day-btn.has-data .day-top-bar { display: block; }
+  .day-tag { display: inline-block; font-size: 11px; font-weight: 900; letter-spacing: 2px; text-transform: uppercase; color: var(--day-color); background: color-mix(in srgb, var(--day-color) 15%, transparent); border-radius: 6px; padding: 3px 8px; margin-bottom: 6px; }
+  .day-name { font-size: 26px; font-weight: 900; color: #fff; text-transform: uppercase; letter-spacing: 0.3px; line-height: 1.1; }
+  .day-meta { font-size: 14px; color: #aaa; font-weight: 700; margin-top: 5px; }
+  .day-progress-wrap { margin-top: 12px; height: 4px; background: #222; border-radius: 4px; overflow: hidden; display: none; }
+  .day-btn.has-data .day-progress-wrap { display: block; }
+  .day-progress-bar { height: 100%; border-radius: 4px; background: var(--day-color); }
+  .day-edit-btn {
+    position: absolute; right: 14px; top: 50%; transform: translateY(-50%);
+    background: #222; border: none; color: #888; width: 36px; height: 36px;
+    border-radius: 10px; cursor: pointer; font-size: 16px;
+    display: flex; align-items: center; justify-content: center;
+  }
+
+  /* WORKOUT */
+  .ex-card { background: var(--card); border: 1px solid var(--border); border-radius: 18px; padding: 16px 14px 14px; margin-bottom: 12px; }
+  .ex-name { font-size: 20px; font-weight: 900; text-transform: uppercase; color: #fff; margin-bottom: 4px; }
+  .ex-note { font-size: 13px; color: #999; font-weight: 600; line-height: 1.5; margin-bottom: 12px; font-style: italic; }
+
+  .series-header { display: grid; grid-template-columns: 28px 1fr 1fr 32px; gap: 8px; margin-bottom: 6px; }
+  .series-col-label { font-size: 11px; color: #888; font-weight: 800; letter-spacing: 1px; text-transform: uppercase; }
+
+  .serie-row { margin-bottom: 8px; }
+  .serie-inputs { display: grid; grid-template-columns: 28px 1fr 1fr 32px; gap: 8px; align-items: center; }
+  .serie-num { font-size: 13px; font-weight: 900; text-align: center; border-radius: 7px; padding: 8px 0; display: block; }
+
+  input[type=number], input[type=text] {
+    background: var(--input-bg); border: 1.5px solid var(--input-border);
+    border-radius: 10px; color: #fff; font-weight: 800;
+    font-family: 'Barlow Condensed', 'Arial Narrow', Arial, sans-serif;
+    width: 100%; padding: 8px 10px; -webkit-appearance: none; outline: none; font-size: 24px;
+  }
+  input:focus { border-color: var(--day-color) !important; }
+  input[type=number]::-webkit-inner-spin-button { -webkit-appearance: none; }
+
+  .remove-serie-btn { background: none; border: none; color: #f87171; font-size: 18px; cursor: pointer; padding: 0; line-height: 1; text-align: center; }
+  .remove-serie-btn:disabled { color: #333; cursor: default; }
+
+  .serie-compare { display: flex; gap: 5px; padding-left: 36px; margin-top: 4px; align-items: center; flex-wrap: wrap; }
+  .compare-label { font-size: 11px; color: #666; font-weight: 700; }
+  .compare-val { font-size: 12px; color: #999; font-weight: 700; }
+  .badge { font-size: 11px; font-weight: 800; border-radius: 6px; padding: 2px 7px; }
+  .badge.up   { color: #4ade80; background: rgba(74,222,128,0.13); }
+  .badge.down { color: #f87171; background: rgba(248,113,113,0.13); }
+  .badge.same { color: #9ca3af; background: rgba(156,163,175,0.13); }
+
+  .add-serie-btn {
+    width: 100%; background: var(--input-bg);
+    border: 1px dashed color-mix(in srgb, var(--day-color) 50%, transparent);
+    border-radius: 10px; color: var(--day-color);
+    font-size: 14px; font-weight: 800; letter-spacing: 1px; text-transform: uppercase;
+    padding: 10px 0; cursor: pointer; margin-top: 4px; font-family: inherit;
+  }
+
+  .save-btn {
+    display: block; width: calc(100% - 28px); margin: 14px 14px;
+    color: #fff; border: none; border-radius: 16px; font-size: 18px; font-weight: 900;
+    letter-spacing: 1.5px; padding: 18px 0; text-transform: uppercase;
+    cursor: pointer; font-family: inherit; flex-shrink: 0;
+    background: var(--day-color);
+    box-shadow: 0 4px 24px color-mix(in srgb, var(--day-color) 35%, transparent);
+  }
+
+  /* EDIT */
+  .edit-ex-row { background: var(--card); border: 1px solid var(--border); border-radius: 14px; padding: 12px 14px; margin-bottom: 8px; display: flex; align-items: center; gap: 10px; }
+  .move-btns { display: flex; flex-direction: column; gap: 2px; }
+  .move-btn { background: none; border: none; font-size: 14px; cursor: pointer; padding: 2px 6px; color: #888; font-family: inherit; }
+  .move-btn:disabled { color: #333; cursor: default; }
+  .edit-ex-name { flex: 1; font-size: 17px; font-weight: 800; text-transform: uppercase; color: #fff; }
+  .remove-ex-btn { background: #2a1010; border: none; color: #f87171; border-radius: 8px; padding: 6px 12px; font-size: 12px; font-weight: 800; text-transform: uppercase; cursor: pointer; font-family: inherit; }
+
+  .add-ex-box { border-radius: 14px; padding: 14px; margin-bottom: 12px; background: var(--card); }
+  .add-ex-box input { font-size: 17px; margin-bottom: 10px; }
+  .add-ex-confirm { width: 100%; color: #fff; border: none; border-radius: 10px; padding: 13px 0; font-size: 16px; font-weight: 900; text-transform: uppercase; cursor: pointer; font-family: inherit; background: var(--day-color); }
+  .save-schema-btn { width: 100%; background: #fff; color: #0c0c0c; border: none; border-radius: 14px; padding: 17px 0; font-size: 17px; font-weight: 900; text-transform: uppercase; cursor: pointer; font-family: inherit; margin-bottom: 16px; }
+
+  .empty-state { flex: 1; display: flex; align-items: center; justify-content: center; text-align: center; color: #444; font-size: 14px; font-weight: 700; text-transform: uppercase; line-height: 1.8; }
+
+  /* TOAST */
+  #toast {
+    position: fixed; top: calc(var(--safe-top) + 60px); left: 50%;
+    transform: translateX(-50%) translateY(-10px);
+    color: #fff; padding: 11px 28px; border-radius: 100px;
+    font-size: 14px; font-weight: 800; letter-spacing: 0.5px;
+    z-index: 999; white-space: nowrap; pointer-events: none;
+    opacity: 0; transition: opacity 0.15s, transform 0.15s;
+    box-shadow: 0 8px 32px rgba(0,0,0,0.6);
+    background: var(--day-color);
+  }
+  #toast.show { opacity: 1; transform: translateX(-50%) translateY(0); }
+
+  .bottom-space { height: calc(var(--safe-bottom) + 10px); flex-shrink: 0; }
+
+  @keyframes slideIn { from { opacity:0; transform:translateX(20px); } to { opacity:1; transform:translateX(0); } }
+  .slide-in { animation: slideIn 0.2s ease forwards; }
+</style>
+</head>
+<body>
+<div id="app">
+  <div id="header">
+    <button id="back-btn" onclick="goBack()">&#8249;</button>
+    <div>
+      <div id="header-eyebrow"></div>
+      <div id="header-title"></div>
+    </div>
+  </div>
+  <div id="screen-home" class="screen active"><div id="home-content"></div><div class="bottom-space"></div></div>
+  <div id="screen-workout" class="screen"><div id="workout-content"></div><button class="save-btn" id="save-btn" onclick="saveWorkout()">Salva allenamento</button><div class="bottom-space"></div></div>
+  <div id="screen-edit" class="screen"><div id="edit-content"></div><div class="bottom-space"></div></div>
+</div>
+<div id="toast"></div>
+
+<script>
+// ── SCHEDA ───────────────────────────────────────────────────────────────────
+const DAYS_DEFAULT = [
+  { id:'A', label:'Petto · Spalle · Gambe', emoji:'💪', color:'#e85d04', exercises:[
+    { name:'Panca Piana',                        note:'4x8-6-6-4 — 75/80/85% RM, rec 2\'' },
+    { name:'Military Press (AMRAP 8\')',          note:'6 reps + 8 piegamenti a ciclo, rec max 1\'30" — segna i giri' },
+    { name:'Panca 45°',                          note:'3x8 buffer 2/3, discesa in 3"' },
+    { name:'Lento Avanti',                       note:'3x10 rec 1\'15"' },
+    { name:'Squat con Manubri',                  note:'4x8 rec 1\'30"' },
+    { name:'Bulgarian Split Squat',              note:'3x10 rec 1\'20"' },
+    { name:'Dead Bug / Barchetta',               note:'5x20" rec 1\'' },
+  ]},
+  { id:'B', label:'Squat · Stacchi · Core', emoji:'🦵', color:'#10b981', exercises:[
+    { name:'Squat',                              note:'5x7 fermo 2" in buca, non oltre il parallelo' },
+    { name:'Stacchi',                            note:'3x8 buffer 2, rec 1\'30"/2\'' },
+    { name:'Affondi Overhead Bilanciere',        note:'3x10 rec 1\'30" — peso leggero, focus addome' },
+    { name:'Leg Curl + Leg Extension (superset)',note:'3x12+12 rec 1\'' },
+    { name:'Crunch Inverso + Plank (superset)',  note:'8/10 reps + 30" — RETROVERSIONE DI BACINO sempre' },
+  ]},
+  { id:'C', label:'Schiena · Stacchi', emoji:'🔙', color:'#3b82f6', exercises:[
+    { name:'Lat Machine',                                      note:'4x8 rec 1\'30"' },
+    { name:'Australian Pull Up + Rematore Plank (AMRAP 10\')', note:'8/10 pull up + 4/6 rematori, rec 1\'30" — segna i giri' },
+    { name:'Rematore Bilanciere + Gorilla Row (superset)',     note:'8 reps buffer 2/3 + 10 reps kettlebell' },
+    { name:'Pull Down Manubrio in Hollow Hold + Plank',        note:'20" hollow hold + 30" plank' },
+    { name:'Stacchi da Terra',                                 note:'3x8/10 rec 1\'30"/2\'' },
+    { name:'Affondi Overhead Bilanciere',                      note:'3x10 rec 1\'30"' },
+    { name:'Calf Raises',                                      note:'3x15/20 rec 50"' },
+  ]},
+  { id:'D', label:'Stacchi · Spalle · Schiena', emoji:'🏋️', color:'#a855f7', exercises:[
+    { name:'Stacchi da Terra',              note:'5x8-6-6-4 rec 2\' — buffer 3, ultima buffer 2/0' },
+    { name:'Squat',                         note:'3x10 fermo 2" in buca, rec 1\'30"' },
+    { name:'Bulgarian Split Squat',         note:'3x12 rec 1\'' },
+    { name:'Military Press + Triceps Push Up (superset)', note:'x4: 8 reps + 6/8 reps, rec 1\'30"' },
+    { name:'Pulley Largo al Petto',         note:'3x10 fermo 2" in contrazione, rec 1\'30"' },
+    { name:'Rematore Manubrio su Panca',    note:'3x10 rec 1\'20"' },
+  ]},
+];
+
+// ── STORAGE ──────────────────────────────────────────────────────────────────
+function ls(key, val) {
+  try {
+    if (val === undefined) { const v = localStorage.getItem(key); return v ? JSON.parse(v) : null; }
+    else { localStorage.setItem(key, JSON.stringify(val)); return true; }
+  } catch(e) { return null; }
+}
+
+// ── SETTIMANA ─────────────────────────────────────────────────────────────────
+function getWeekKey(offset) {
+  const now = new Date(), dow = now.getDay()||7, m = new Date(now);
+  m.setDate(now.getDate()-dow+1-(offset||0)*7);
+  return m.toISOString().slice(0,10);
+}
+function fmt(d) { if(!d) return ''; const [,mo,dy]=d.split('-'); return dy+'/'+mo; }
+const THIS_KEY = getWeekKey(0);
+const LAST_KEY = getWeekKey(1);
+
+// ── STATE ─────────────────────────────────────────────────────────────────────
+const state = { days: JSON.parse(JSON.stringify(DAYS_DEFAULT)), thisWeek:{}, lastWeek:{}, screen:'home', activeDayId:null };
+
+function loadState() {
+  const days=ls('gym_days_v3'), tw=ls('gym_log_'+THIS_KEY), lw=ls('gym_log_'+LAST_KEY);
+  if(days) state.days=days;
+  if(tw)   state.thisWeek=tw;
+  if(lw)   state.lastWeek=lw;
+}
+
+// ── AUTOSAVE ──────────────────────────────────────────────────────────────────
+function autoSave() { ls('gym_log_'+THIS_KEY, state.thisWeek); }
+
+// ── TOAST ─────────────────────────────────────────────────────────────────────
+let toastTimer;
+function showToast(msg) {
+  const el=document.getElementById('toast');
+  el.textContent=msg; el.classList.add('show');
+  clearTimeout(toastTimer); toastTimer=setTimeout(()=>el.classList.remove('show'),2200);
+}
+
+// ── HELPERS ───────────────────────────────────────────────────────────────────
+function activeDay() { return state.days.find(d=>d.id===state.activeDayId)||null; }
+function exName(e)   { return typeof e==='string'?e:e.name; }
+function exNote(e)   { return typeof e==='string'?'':e.note||''; }
+function getSeries(ex)     { return state.thisWeek[state.activeDayId]?.[ex]?.series||[{peso:'',reps:''}]; }
+function getLastSeries(ex) { return state.lastWeek[state.activeDayId]?.[ex]?.series||[]; }
+function diff(a,b) { const n=parseFloat(a),o=parseFloat(b); if(isNaN(n)||isNaN(o)) return null; return Math.round((n-o)*10)/10; }
+function badge(val,unit) {
+  if(val===null) return '';
+  const cls=val>0?'up':val<0?'down':'same', sign=val>0?'+':'';
+  return '<span class="badge '+cls+'">'+sign+val+unit+'</span>';
+}
+function esc(s) { return (''+s).replace(/\\/g,'\\\\').replace(/'/g,"\\'"); }
+function setColor(c) { document.documentElement.style.setProperty('--day-color',c||'#e85d04'); }
+
+// ── NAVIGATE ──────────────────────────────────────────────────────────────────
+function navigate(screen) {
+  document.querySelectorAll('.screen').forEach(s=>s.classList.remove('active'));
+  state.screen=screen;
+  const day=activeDay();
+  const back=document.getElementById('back-btn');
+  document.getElementById('header-eyebrow').style.color=day?.color||'#e85d04';
+  setColor(day?.color);
+
+  if(screen==='home') {
+    back.style.display='none';
+    document.getElementById('header-eyebrow').textContent='Sett. '+fmt(THIS_KEY);
+    document.getElementById('header-title').textContent='Buona palestra 💪';
+    renderHome(); show('screen-home');
+  } else if(screen==='workout') {
+    back.style.display='flex';
+    document.getElementById('header-eyebrow').textContent='Giorno '+day.id;
+    document.getElementById('header-title').textContent='Allenamento';
+    document.getElementById('save-btn').style.background=day.color;
+    renderWorkout(); show('screen-workout');
+  } else if(screen==='edit') {
+    back.style.display='flex';
+    document.getElementById('header-eyebrow').textContent='Giorno '+day.id;
+    document.getElementById('header-title').textContent='Modifica scheda';
+    renderEdit(); show('screen-edit');
+  }
+}
+function show(id) { const el=document.getElementById(id); el.classList.add('active','slide-in'); setTimeout(()=>el.classList.remove('slide-in'),300); }
+function goBack() { state.activeDayId=null; navigate('home'); }
+
+// ── RENDER HOME ───────────────────────────────────────────────────────────────
+function renderHome() {
+  let html='<div class="section-label">Settimana del '+fmt(THIS_KEY)+'</div>';
+  state.days.forEach(day=>{
+    const names=day.exercises.map(exName);
+    const done=names.filter(n=>(state.thisWeek[day.id]?.[n]?.series||[]).some(s=>s.peso||s.reps)).length;
+    const total=names.length, pct=total>0?Math.round(done/total*100):0, has=done>0;
+    html+='<div class="day-wrap">'+
+      '<button class="day-btn'+(has?' has-data':'')+'" style="--day-color:'+day.color+'" onclick="openDay(\''+day.id+'\')">'+
+        '<div class="day-top-bar"></div>'+
+        '<div class="day-tag">Giorno '+day.id+'</div>'+
+        '<div class="day-name">'+day.label+'</div>'+
+        '<div class="day-meta">'+(total===0?'Nessun esercizio':total+' esercizi')+(has?' <span style="color:'+day.color+';margin-left:8px">'+done+'/'+total+' completati</span>':'')+'</div>'+
+        '<div class="day-progress-wrap"><div class="day-progress-bar" style="width:'+pct+'%;background:'+day.color+'"></div></div>'+
+      '</button>'+
+      '<button class="day-edit-btn" onclick="openEdit(\''+day.id+'\')">✏️</button>'+
+    '</div>';
+  });
+  document.getElementById('home-content').innerHTML=html;
+}
+
+// ── RENDER WORKOUT ────────────────────────────────────────────────────────────
+function renderWorkout() {
+  const day=activeDay(), el=document.getElementById('workout-content');
+  if(!day.exercises||day.exercises.length===0){ el.innerHTML='<div class="empty-state">Nessun esercizio.<br><span style="color:#555">Torna indietro e usa ✏️</span></div>'; return; }
+  let html='';
+  day.exercises.forEach(exObj=>{
+    const name=exName(exObj), note=exNote(exObj);
+    const series=getSeries(name), last=getLastSeries(name);
+    let rows='';
+    series.forEach((s,i)=>{
+      const lw=last[i]||null;
+      const dp=lw?diff(s.peso,lw.peso):null, dr=lw?diff(s.reps,lw.reps):null;
+      const cmp=(lw&&(lw.peso||lw.reps))?'<div class="serie-compare"><span class="compare-label">scorsa:</span>'+(lw.peso?'<span class="compare-val">'+lw.peso+'kg</span>':'')+(lw.reps?'<span class="compare-val">'+lw.reps+'rep</span>':'')+badge(dp,'kg')+badge(dr,'r')+'</div>':'';
+      rows+='<div class="serie-row">'+
+        '<div class="serie-inputs">'+
+          '<span class="serie-num" style="color:'+day.color+';background:'+day.color+'22">'+(i+1)+'</span>'+
+          '<input type="number" inputmode="decimal" value="'+s.peso+'" placeholder="'+(lw?.peso||'0')+'" oninput="updateSerie(\''+esc(name)+'\','+i+',\'peso\',this.value)">'+
+          '<input type="number" inputmode="numeric" value="'+s.reps+'" placeholder="'+(lw?.reps||'0')+'" oninput="updateSerie(\''+esc(name)+'\','+i+',\'reps\',this.value)">'+
+          '<button class="remove-serie-btn" onclick="removeSerie(\''+esc(name)+'\','+i+')" '+(series.length===1?'disabled':'')+'>✕</button>'+
+        '</div>'+cmp+
+      '</div>';
+    });
+    html+='<div class="ex-card">'+
+      '<div class="ex-name">'+name+'</div>'+
+      (note?'<div class="ex-note">'+note+'</div>':'')+
+      '<div class="series-header"><span class="series-col-label" style="text-align:center">#</span><span class="series-col-label">Peso kg</span><span class="series-col-label">Reps</span><span></span></div>'+
+      rows+
+      '<button class="add-serie-btn" onclick="addSerie(\''+esc(name)+'\')">+ Serie</button>'+
+    '</div>';
+  });
+  el.innerHTML=html;
+}
+
+// ── RENDER EDIT ───────────────────────────────────────────────────────────────
+function renderEdit() {
+  const day=activeDay(), el=document.getElementById('edit-content');
+  let html='<div class="section-label">Esercizi — Giorno '+day.id+'</div>';
+  if(!day.exercises||day.exercises.length===0) html+='<div style="text-align:center;padding:24px 0;color:#555;font-size:14px;font-weight:700;text-transform:uppercase">Nessun esercizio</div>';
+  day.exercises.forEach((exObj,i)=>{
+    const name=exName(exObj);
+    html+='<div class="edit-ex-row">'+
+      '<div class="move-btns">'+
+        '<button class="move-btn" onclick="moveEx('+i+',-1)" '+(i===0?'disabled':'')+'>▲</button>'+
+        '<button class="move-btn" onclick="moveEx('+i+',1)" '+(i===day.exercises.length-1?'disabled':'')+'>▼</button>'+
+      '</div>'+
+      '<span class="edit-ex-name">'+name+'</span>'+
+      '<button class="remove-ex-btn" onclick="removeEx(\''+esc(name)+'\')">Rimuovi</button>'+
+    '</div>';
+  });
+  html+='<div class="add-ex-box" style="border:1.5px dashed color-mix(in srgb,'+day.color+' 50%,transparent)">'+
+    '<input type="text" id="new-ex-input" placeholder="Nuovo esercizio..." onkeydown="if(event.key===\'Enter\')addEx()">'+
+    '<button class="add-ex-confirm" onclick="addEx()">+ Aggiungi</button>'+
+  '</div>'+
+  '<button class="save-schema-btn" onclick="saveSchema()">Salva scheda</button>'+
+  '<div class="bottom-space"></div>';
+  el.innerHTML=html;
+}
+
+// ── AZIONI ────────────────────────────────────────────────────────────────────
+function openDay(id)  { state.activeDayId=id; navigate('workout'); }
+function openEdit(id) { state.activeDayId=id; navigate('edit'); }
+
+function ensureSeries(ex) {
+  const d=state.activeDayId;
+  if(!state.thisWeek[d]) state.thisWeek[d]={};
+  if(!state.thisWeek[d][ex]) state.thisWeek[d][ex]={};
+  if(!state.thisWeek[d][ex].series) state.thisWeek[d][ex].series=[{peso:'',reps:''}];
+}
+
+function updateSerie(ex,idx,field,val) {
+  ensureSeries(ex);
+  state.thisWeek[state.activeDayId][ex].series[idx][field]=val;
+  autoSave(); // salva ad ogni carattere digitato
+}
+
+function addSerie(ex) {
+  ensureSeries(ex);
+  state.thisWeek[state.activeDayId][ex].series.push({peso:'',reps:''});
+  autoSave(); renderWorkout();
+}
+
+function removeSerie(ex,idx) {
+  const s=state.thisWeek[state.activeDayId]?.[ex]?.series;
+  if(!s||s.length<=1) return;
+  s.splice(idx,1); autoSave(); renderWorkout();
+}
+
+function saveWorkout() { autoSave(); showToast('Salvato ✓'); }
+
+function addEx() {
+  const input=document.getElementById('new-ex-input'), name=input.value.trim(), day=activeDay();
+  if(!name||day.exercises.some(e=>exName(e)===name)) return;
+  day.exercises.push({name,note:''}); input.value=''; renderEdit();
+}
+
+function removeEx(name) {
+  const day=activeDay();
+  day.exercises=day.exercises.filter(e=>exName(e)!==name); renderEdit();
+}
+
+function moveEx(i,dir) {
+  const day=activeDay(), j=i+dir;
+  if(j<0||j>=day.exercises.length) return;
+  [day.exercises[i],day.exercises[j]]=[day.exercises[j],day.exercises[i]]; renderEdit();
+}
+
+function saveSchema() { ls('gym_days_v3',state.days); showToast('Scheda aggiornata ✓'); goBack(); }
+
+// ── SALVA ANCHE QUANDO ESCI DALLA PAGINA ─────────────────────────────────────
+document.addEventListener('visibilitychange', ()=>{ if(document.visibilityState==='hidden') autoSave(); });
+window.addEventListener('pagehide', ()=>autoSave());
+window.addEventListener('blur', ()=>autoSave());
+
+// ── INIT ──────────────────────────────────────────────────────────────────────
+loadState();
+navigate('home');
+</script>
+</body>
+</html>
