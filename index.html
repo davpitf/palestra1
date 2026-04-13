@@ -7,6 +7,9 @@
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
 <meta name="apple-mobile-web-app-title" content="Palestra">
 <meta name="theme-color" content="#0c0c0c">
+<meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
+<meta http-equiv="Pragma" content="no-cache">
+<meta http-equiv="Expires" content="0">
 <title>Palestra</title>
 <style>
 @import url('https://fonts.googleapis.com/css2?family=Barlow+Condensed:wght@400;600;700;800;900&display=swap');
@@ -501,7 +504,7 @@ function renderHistory(){
           (daysLogged.length?daysLogged.map(d=>'<span style="font-size:11px;font-weight:900;letter-spacing:1px;text-transform:uppercase;color:'+d.color+';background:'+d.color+'22;border-radius:5px;padding:2px 7px">Giorno '+d.id+'</span>').join(''):'<span style="font-size:12px;color:#555">Nessun dato</span>')+
         '</div>'+
       '</div>'+
-      '<button onclick="deleteWeek(\''+wkey+'\')" style="position:absolute;top:50%;right:12px;transform:translateY(-50%);background:#2a1010;border:none;color:#f87171;border-radius:9px;width:36px;height:36px;font-size:17px;cursor:pointer;display:flex;align-items:center;justify-content:center">🗑</button>'+
+      '<button onclick="event.stopPropagation();deleteWeek(\''+wkey+'\')" style="position:absolute;top:50%;right:12px;transform:translateY(-50%);background:#2a1010;border:none;color:#f87171;border-radius:9px;width:36px;height:36px;font-size:17px;cursor:pointer;display:flex;align-items:center;justify-content:center">🗑</button>'+
     '</div>';
   });
   el.innerHTML=h;
@@ -525,13 +528,19 @@ function renderSettings(){
 }
 
 function hardRefresh(){
-  if(!confirm('Svuotare la cache e ricaricare l\'app?'))return;
-  // clear caches via Cache API if available
-  if('caches' in window){
-    caches.keys().then(names=>names.forEach(n=>caches.delete(n)));
+  if(!window.confirm('Svuotare la cache e ricaricare?'))return;
+  try{
+    if('caches' in window){
+      caches.keys().then(names=>{
+        names.forEach(n=>caches.delete(n));
+        window.location.href=window.location.href.split('?')[0]+'?v='+Date.now();
+      });
+    }else{
+      window.location.href=window.location.href.split('?')[0]+'?v='+Date.now();
+    }
+  }catch(e){
+    window.location.reload(true);
   }
-  // force reload bypassing cache
-  window.location.reload(true);
 }
 
 function clearAllData(){
@@ -546,12 +555,15 @@ function clearAllData(){
 }
 
 function deleteWeek(wkey){
-  if(!confirm('Eliminare l\'allenamento del '+fmtD(wkey)+'?'))return;
-  try{localStorage.removeItem(LOG_PFX+wkey)}catch(e){}
-  if(wkey===THIS_KEY){S.thisWeek={};lsSet(LOG_PFX+THIS_KEY,{})}
-  if(wkey===LAST_KEY)S.lastWeek={};
-  showToast('Eliminato','#555');
-  renderHistory();
+  // Use custom confirm since iOS PWA can block native confirm()
+  if(!window.confirm('Eliminare allenamento del '+fmtD(wkey)+'?'))return;
+  try{
+    localStorage.removeItem(LOG_PFX+wkey);
+  }catch(e){console.error('delete error',e)}
+  if(wkey===THIS_KEY){S.thisWeek={}}
+  if(wkey===LAST_KEY){S.lastWeek={}}
+  showToast('Eliminato ✓','#333');
+  setTimeout(()=>renderHistory(),100);
 }
 
 // ═══ RENDER HISTORY WEEK ═════════════════════════════════════════════════════
