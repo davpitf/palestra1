@@ -135,6 +135,41 @@ input[type=number]::-webkit-inner-spin-button{-webkit-appearance:none}
 .hist-val{font-size:13px;font-weight:800;color:#ddd}
 .hist-note{font-size:12px;color:#777;font-style:italic;margin-top:5px;padding:7px 9px;background:#111;border-radius:7px;line-height:1.5}
 
+
+/* ═══ TIMER ══════════════════════════════════════════════════════════════════ */
+#timer-bar{
+  position:fixed;bottom:0;left:50%;transform:translateX(-50%) translateY(100%);
+  width:100%;max-width:393px;
+  background:#111;border-top:1px solid #2a2a2a;
+  padding:12px 16px calc(var(--safe-b) + 12px);
+  z-index:500;transition:transform .3s cubic-bezier(.4,0,.2,1);
+  display:flex;flex-direction:column;gap:10px;
+}
+#timer-bar.open{transform:translateX(-50%) translateY(0)}
+.timer-presets{display:grid;grid-template-columns:repeat(5,1fr);gap:6px}
+.tp{background:#1e1e1e;border:1px solid #2a2a2a;border-radius:8px;color:#aaa;
+  font-family:inherit;font-size:12px;font-weight:800;letter-spacing:.5px;
+  padding:8px 0;cursor:pointer;text-align:center;transition:background .15s,color .15s}
+.tp:active,.tp.sel{background:var(--ac);border-color:var(--ac);color:#fff}
+.timer-display{display:flex;align-items:center;justify-content:space-between;gap:10px}
+#timer-countdown{
+  font-size:48px;font-weight:900;letter-spacing:-1px;color:#fff;line-height:1;
+  font-variant-numeric:tabular-nums;min-width:110px;
+}
+#timer-countdown.done{color:#4ade80}
+#timer-countdown.urgent{color:#f87171}
+.timer-btns{display:flex;gap:8px;flex:1;justify-content:flex-end}
+.tbtn{border:none;border-radius:10px;font-family:inherit;font-size:14px;font-weight:900;
+  letter-spacing:.5px;padding:10px 16px;cursor:pointer;text-transform:uppercase}
+#tbtn-start{background:var(--ac);color:#fff}
+#tbtn-reset{background:#222;color:#888}
+#tbtn-close{background:#1a1a1a;color:#555;padding:10px 12px}
+.timer-ring-wrap{position:relative;width:56px;height:56px;flex-shrink:0}
+.timer-ring-wrap svg{width:56px;height:56px;transform:rotate(-90deg)}
+#ring-bg{fill:none;stroke:#222;stroke-width:4}
+#ring-fg{fill:none;stroke:var(--ac);stroke-width:4;stroke-linecap:round;
+  stroke-dasharray:157;stroke-dashoffset:0;transition:stroke-dashoffset .9s linear,stroke .3s}
+
 /* TOAST */
 #toast{position:fixed;top:calc(var(--safe-t) + 58px);left:50%;transform:translateX(-50%) translateY(-10px);color:#fff;padding:10px 26px;border-radius:100px;font-size:14px;font-weight:800;letter-spacing:.5px;z-index:999;white-space:nowrap;pointer-events:none;opacity:0;transition:opacity .15s,transform .15s;box-shadow:0 8px 32px rgba(0,0,0,.6);background:var(--ac)}
 #toast.on{opacity:1;transform:translateX(-50%) translateY(0)}
@@ -149,7 +184,7 @@ input[type=number]::-webkit-inner-spin-button{-webkit-appearance:none}
     <div><div id="eyebrow"></div><div id="htitle"></div></div>
   </div>
   <div id="s-home"     class="scr on"><div id="home-c"></div><div class="bspace"></div></div>
-  <div id="s-workout"  class="scr"><div id="workout-c"></div><button class="savebtn" id="savebtn" onclick="saveWorkout()">💾 Salva allenamento</button><div class="bspace"></div></div>
+  <div id="s-workout"  class="scr"><div id="workout-c"></div><div style="display:flex;gap:8px;padding:10px 14px 0"><button class="savebtn" id="savebtn" onclick="saveWorkout()" style="margin:0;flex:1">💾 Salva</button><button onclick="openTimer()" style="background:#181818;border:1px solid #2a2a2a;color:#fff;border-radius:14px;font-size:22px;width:56px;height:56px;cursor:pointer;flex-shrink:0;display:flex;align-items:center;justify-content:center">⏱</button></div><div class="bspace"></div></div>
   <div id="s-edit"     class="scr"><div id="edit-c"></div><div class="bspace"></div></div>
   <div id="s-history"  class="scr"><div id="hist-c"></div><div class="bspace"></div></div>
   <div id="s-histweek" class="scr"><div id="histweek-c"></div><div class="bspace"></div></div>
@@ -160,6 +195,26 @@ input[type=number]::-webkit-inner-spin-button{-webkit-appearance:none}
     <button class="nb" id="nb-history" onclick="navTab('history')">
       <svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>Storico
     </button>
+  </div>
+</div>
+<div id="timer-bar">
+  <div class="timer-presets">
+    <button class="tp" onclick="setTimer(60)">1'</button>
+    <button class="tp" onclick="setTimer(75)">1'15"</button>
+    <button class="tp" onclick="setTimer(80)">1'20"</button>
+    <button class="tp" onclick="setTimer(90)">1'30"</button>
+    <button class="tp" onclick="setTimer(120)">2'</button>
+  </div>
+  <div class="timer-display">
+    <div class="timer-ring-wrap">
+      <svg viewBox="0 0 56 56"><circle id="ring-bg" cx="28" cy="28" r="25"/><circle id="ring-fg" cx="28" cy="28" r="25"/></svg>
+    </div>
+    <div id="timer-countdown">0:00</div>
+    <div class="timer-btns">
+      <button class="tbtn" id="tbtn-reset" onclick="resetTimer()">Reset</button>
+      <button class="tbtn" id="tbtn-start" onclick="toggleTimer()">Start</button>
+      <button class="tbtn" id="tbtn-close" onclick="closeTimer()">✕</button>
+    </div>
   </div>
 </div>
 <div id="toast"></div>
@@ -450,9 +505,46 @@ function renderHistory(){
     '</div>';
   });
   el.innerHTML=h;
+  renderSettings();
 }
 
 // ═══ DELETE WEEK ═════════════════════════════════════════════════════════════
+function renderSettings(){
+  const settingsHtml='<div style="margin-top:20px;padding-top:16px;border-top:1px solid #222">'+
+    '<div class="slbl">Impostazioni</div>'+
+    '<button onclick="hardRefresh()" style="width:100%;background:#181818;border:1px solid #2a2a2a;color:#aaa;border-radius:13px;padding:14px 16px;font-family:inherit;font-size:15px;font-weight:800;text-transform:uppercase;letter-spacing:1px;cursor:pointer;display:flex;align-items:center;gap:10px;margin-bottom:8px">'+
+      '<span style="font-size:20px">🔄</span>'+
+      '<div style="text-align:left"><div style="color:#fff">Aggiorna app</div><div style="font-size:11px;color:#555;font-weight:700;margin-top:2px">Svuota cache e ricarica la versione più recente</div></div>'+
+    '</button>'+
+    '<button onclick="clearAllData()" style="width:100%;background:#1a0a0a;border:1px solid #3a1010;color:#f87171;border-radius:13px;padding:14px 16px;font-family:inherit;font-size:15px;font-weight:800;text-transform:uppercase;letter-spacing:1px;cursor:pointer;display:flex;align-items:center;gap:10px">'+
+      '<span style="font-size:20px">🗑</span>'+
+      '<div style="text-align:left"><div>Cancella tutti i dati</div><div style="font-size:11px;color:#a55;font-weight:700;margin-top:2px">Elimina tutti gli allenamenti salvati</div></div>'+
+    '</button>'+
+  '</div>';
+  document.getElementById('hist-c').insertAdjacentHTML('beforeend', settingsHtml);
+}
+
+function hardRefresh(){
+  if(!confirm('Svuotare la cache e ricaricare l\'app?'))return;
+  // clear caches via Cache API if available
+  if('caches' in window){
+    caches.keys().then(names=>names.forEach(n=>caches.delete(n)));
+  }
+  // force reload bypassing cache
+  window.location.reload(true);
+}
+
+function clearAllData(){
+  if(!confirm('Eliminare TUTTI gli allenamenti salvati? Questa azione non è reversibile.'))return;
+  try{
+    const keys=lsKeys().filter(k=>k.startsWith(LOG_PFX));
+    keys.forEach(k=>localStorage.removeItem(k));
+    S.thisWeek={};S.lastWeek={};
+    showToast('Dati eliminati','#555');
+    renderHistory();
+  }catch(e){showToast('Errore','#f87171')}
+}
+
 function deleteWeek(wkey){
   if(!confirm('Eliminare l\'allenamento del '+fmtD(wkey)+'?'))return;
   try{localStorage.removeItem(LOG_PFX+wkey)}catch(e){}
@@ -550,6 +642,82 @@ function saveSchema(){lsSet(DAYS_KEY,S.days);showToast('✓ Scheda salvata');nav
 document.addEventListener('visibilitychange',()=>{if(document.visibilityState==='hidden')save()});
 window.addEventListener('pagehide',()=>save());
 window.addEventListener('blur',()=>save());
+
+
+// ═══ TIMER ═══════════════════════════════════════════════════════════════════
+const T={secs:90,remaining:90,running:false,interval:null,total:90};
+
+function openTimer(){
+  document.getElementById('timer-bar').classList.add('open');
+  updateTimerUI();
+}
+function closeTimer(){
+  document.getElementById('timer-bar').classList.remove('open');
+  pauseTimer();
+}
+function setTimer(secs){
+  pauseTimer();
+  T.secs=secs;T.remaining=secs;T.total=secs;
+  document.querySelectorAll('.tp').forEach(b=>b.classList.remove('sel'));
+  event.target.classList.add('sel');
+  updateTimerUI();
+}
+function toggleTimer(){
+  if(T.running)pauseTimer();
+  else startTimer();
+}
+function startTimer(){
+  if(T.remaining<=0){T.remaining=T.total}
+  T.running=true;
+  document.getElementById('tbtn-start').textContent='Pausa';
+  T.interval=setInterval(()=>{
+    T.remaining--;
+    updateTimerUI();
+    if(T.remaining<=0){
+      clearInterval(T.interval);T.running=false;
+      document.getElementById('tbtn-start').textContent='Start';
+      timerDone();
+    }
+  },1000);
+}
+function pauseTimer(){
+  clearInterval(T.interval);T.running=false;
+  document.getElementById('tbtn-start').textContent='Start';
+}
+function resetTimer(){
+  pauseTimer();T.remaining=T.total;updateTimerUI();
+}
+function timerDone(){
+  // vibrate
+  if(navigator.vibrate)navigator.vibrate([200,100,200,100,400]);
+  // beep with Web Audio
+  try{
+    const ctx=new(window.AudioContext||window.webkitAudioContext)();
+    [0,0.3,0.6].forEach(t=>{
+      const o=ctx.createOscillator(),g=ctx.createGain();
+      o.connect(g);g.connect(ctx.destination);
+      o.frequency.value=880;g.gain.setValueAtTime(0.4,ctx.currentTime+t);
+      g.gain.exponentialRampToValueAtTime(0.001,ctx.currentTime+t+0.25);
+      o.start(ctx.currentTime+t);o.stop(ctx.currentTime+t+0.25);
+    });
+  }catch(e){}
+  const cd=document.getElementById('timer-countdown');
+  cd.classList.add('done');
+  setTimeout(()=>cd.classList.remove('done'),3000);
+}
+function updateTimerUI(){
+  const m=Math.floor(T.remaining/60),s=T.remaining%60;
+  const cd=document.getElementById('timer-countdown');
+  cd.textContent=m+':'+(s<10?'0':'')+s;
+  cd.classList.toggle('urgent',T.remaining>0&&T.remaining<=10);
+  cd.classList.toggle('done',T.remaining===0&&!T.running);
+  // ring
+  const pct=T.total>0?T.remaining/T.total:1;
+  const offset=157*(1-pct);
+  const ring=document.getElementById('ring-fg');
+  ring.style.strokeDashoffset=offset;
+  ring.style.stroke=T.remaining<=10&&T.remaining>0?'#f87171':T.remaining===0?'#4ade80':'var(--ac)';
+}
 
 // ═══ INIT ════════════════════════════════════════════════════════════════════
 loadState();navTab('home');
